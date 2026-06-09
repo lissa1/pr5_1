@@ -13,19 +13,19 @@ private:
     float unitSize;          // Размер единичного отрезка в пикселях
     
     // Constants
-    const int WINDOW_WIDTH = 1200;
-    const int WINDOW_HEIGHT = 800;
-    const float MIN_SCALE = 0.5f;
-    const float MAX_SCALE = 50.0f;
-    const float SCALE_STEP = 1.1f;
-    const float MOVE_STEP = 20.0f;
+    static constexpr unsigned int WINDOW_WIDTH = 1200;
+    static constexpr unsigned int WINDOW_HEIGHT = 800;
+    static constexpr float MIN_SCALE = 0.5f;
+    static constexpr float MAX_SCALE = 50.0f;
+    static constexpr float SCALE_STEP = 1.1f;
+    static constexpr float MOVE_STEP = 20.0f;
     
     // Colors
-    const sf::Color COLOR_BACKGROUND = sf::Color::White;
-    const sf::Color COLOR_AXIS = sf::Color::Black;
-    const sf::Color COLOR_GRID = sf::Color(200, 200, 200);
-    const sf::Color COLOR_GRAPH = sf::Color::Blue;
-    const sf::Color COLOR_ASYMPTOTE = sf::Color::Red;
+    static constexpr sf::Color COLOR_BACKGROUND = sf::Color::White;
+    static constexpr sf::Color COLOR_AXIS = sf::Color::Black;
+    static constexpr sf::Color COLOR_GRID = sf::Color(200, 200, 200);
+    static constexpr sf::Color COLOR_GRAPH = sf::Color::Blue;
+    static constexpr sf::Color COLOR_ASYMPTOTE = sf::Color::Red;
     
 public:
     Graph();
