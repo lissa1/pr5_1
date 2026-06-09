@@ -4,8 +4,8 @@ project(FunctionGrapher)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Find SFML
-find_package(SFML 2.5 COMPONENTS graphics window system REQUIRED)
+# Find SFML 3.0+
+find_package(SFML 3.0 COMPONENTS graphics window system REQUIRED)
 
 # Create executable
 add_executable(function_grapher 
@@ -14,8 +14,8 @@ add_executable(function_grapher
     src/Graph.h
 )
 
-# Link SFML libraries
-target_link_libraries(function_grapher PRIVATE sfml-graphics sfml-window sfml-system)
+# Link SFML libraries (SFML 3.0+ uses different linking)
+target_link_libraries(function_grapher PRIVATE SFML::Graphics SFML::Window SFML::System)
 
 # Include directories
 target_include_directories(function_grapher PRIVATE src)
