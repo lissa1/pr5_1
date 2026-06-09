@@ -41,7 +41,7 @@ void Graph::handleInput() {
             unitSize *= SCALE_STEP;
         }
     }
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Subtract) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Dash)) {
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Subtract) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Hyphen)) {
         if (scale > MIN_SCALE) {
             scale /= SCALE_STEP;
             unitSize /= SCALE_STEP;
@@ -146,17 +146,16 @@ void Graph::drawGrid() {
     
     sf::Color gridColor = (std::abs(gridStep - 1.0f) < 0.1f) ? COLOR_MAJOR_GRID : COLOR_GRID;
     
+    std::vector<sf::Vertex> gridVertices;
+    
     // Вертикальные линии сетки
     for (float x = std::ceil(topLeft.x / gridStep) * gridStep; 
          x <= bottomRight.x; x += gridStep) {
         sf::Vector2f p1 = worldToScreen(x, topLeft.y);
         sf::Vector2f p2 = worldToScreen(x, bottomRight.y);
         
-        std::vector<sf::Vertex> vertices = {
-            sf::Vertex(p1, gridColor),
-            sf::Vertex(p2, gridColor)
-        };
-        window.draw(vertices.data(), vertices.size(), sf::PrimitiveType::Lines);
+        gridVertices.push_back(sf::Vertex(p1, gridColor));
+        gridVertices.push_back(sf::Vertex(p2, gridColor));
     }
     
     // Горизонтальные линии сетки
@@ -165,11 +164,12 @@ void Graph::drawGrid() {
         sf::Vector2f p1 = worldToScreen(topLeft.x, y);
         sf::Vector2f p2 = worldToScreen(bottomRight.x, y);
         
-        std::vector<sf::Vertex> vertices = {
-            sf::Vertex(p1, gridColor),
-            sf::Vertex(p2, gridColor)
-        };
-        window.draw(vertices.data(), vertices.size(), sf::PrimitiveType::Lines);
+        gridVertices.push_back(sf::Vertex(p1, gridColor));
+        gridVertices.push_back(sf::Vertex(p2, gridColor));
+    }
+    
+    if (!gridVertices.empty()) {
+        window.draw(gridVertices.data(), gridVertices.size(), sf::PrimitiveType::Lines);
     }
 }
 
@@ -178,19 +178,17 @@ void Graph::drawAxes() {
     sf::Vector2f bottomRight = screenToWorld(static_cast<float>(WINDOW_WIDTH), static_cast<float>(WINDOW_HEIGHT));
     sf::Vector2f origin = worldToScreen(0, 0);
     
+    std::vector<sf::Vertex> axisVertices;
+    
     // Ось X
-    std::vector<sf::Vertex> axisX = {
-        sf::Vertex(worldToScreen(topLeft.x, 0), COLOR_AXIS),
-        sf::Vertex(worldToScreen(bottomRight.x, 0), COLOR_AXIS)
-    };
-    window.draw(axisX.data(), axisX.size(), sf::PrimitiveType::Lines);
+    axisVertices.push_back(sf::Vertex(worldToScreen(topLeft.x, 0), COLOR_AXIS));
+    axisVertices.push_back(sf::Vertex(worldToScreen(bottomRight.x, 0), COLOR_AXIS));
     
     // Ось Y
-    std::vector<sf::Vertex> axisY = {
-        sf::Vertex(worldToScreen(0, topLeft.y), COLOR_AXIS),
-        sf::Vertex(worldToScreen(0, bottomRight.y), COLOR_AXIS)
-    };
-    window.draw(axisY.data(), axisY.size(), sf::PrimitiveType::Lines);
+    axisVertices.push_back(sf::Vertex(worldToScreen(0, topLeft.y), COLOR_AXIS));
+    axisVertices.push_back(sf::Vertex(worldToScreen(0, bottomRight.y), COLOR_AXIS));
+    
+    window.draw(axisVertices.data(), axisVertices.size(), sf::PrimitiveType::Lines);
     
     // Стрелки на осях (вправо для X)
     float arrowSize = 12.0f;
@@ -218,14 +216,6 @@ void Graph::drawAxes() {
     originPoint.setFillColor(COLOR_AXIS);
     originPoint.setPosition(origin.x - 4, origin.y - 4);
     window.draw(originPoint);
-    
-    // Подпись начала координат
-    sf::RectangleShape originLabel(sf::Vector2f(25, 18));
-    originLabel.setPosition(origin.x + 8, origin.y + 8);
-    originLabel.setFillColor(COLOR_BACKGROUND);
-    originLabel.setOutlineColor(COLOR_TEXT);
-    originLabel.setOutlineThickness(0.5f);
-    window.draw(originLabel);
 }
 
 void Graph::drawAxisTicksAndLabels() {
@@ -240,34 +230,32 @@ void Graph::drawAxisTicksAndLabels() {
     
     float tickSize = 6.0f;
     
-    // Подписи для оси X
+    std::vector<sf::Vertex> tickVertices;
+    
+    // Засечки для оси X
     for (float x = std::ceil(topLeft.x / labelStep) * labelStep;
          x <= bottomRight.x; x += labelStep) {
         if (std::abs(x) < 1e-5) continue;
         
         sf::Vector2f pos = worldToScreen(x, 0);
         
-        // Засечка
-        std::vector<sf::Vertex> tick = {
-            sf::Vertex(pos + sf::Vector2f(0, -tickSize), COLOR_AXIS),
-            sf::Vertex(pos + sf::Vector2f(0, tickSize), COLOR_AXIS)
-        };
-        window.draw(tick.data(), tick.size(), sf::PrimitiveType::Lines);
+        tickVertices.push_back(sf::Vertex(pos + sf::Vector2f(0, -tickSize), COLOR_AXIS));
+        tickVertices.push_back(sf::Vertex(pos + sf::Vector2f(0, tickSize), COLOR_AXIS));
     }
     
-    // Подписи для оси Y
+    // Засечки для оси Y
     for (float y = std::ceil(bottomRight.y / labelStep) * labelStep;
          y <= topLeft.y; y += labelStep) {
         if (std::abs(y) < 1e-5) continue;
         
         sf::Vector2f pos = worldToScreen(0, y);
         
-        // Засечка
-        std::vector<sf::Vertex> tick = {
-            sf::Vertex(pos + sf::Vector2f(-tickSize, 0), COLOR_AXIS),
-            sf::Vertex(pos + sf::Vector2f(tickSize, 0), COLOR_AXIS)
-        };
-        window.draw(tick.data(), tick.size(), sf::PrimitiveType::Lines);
+        tickVertices.push_back(sf::Vertex(pos + sf::Vector2f(-tickSize, 0), COLOR_AXIS));
+        tickVertices.push_back(sf::Vertex(pos + sf::Vector2f(tickSize, 0), COLOR_AXIS));
+    }
+    
+    if (!tickVertices.empty()) {
+        window.draw(tickVertices.data(), tickVertices.size(), sf::PrimitiveType::Lines);
     }
 }
 
@@ -327,53 +315,50 @@ void Graph::drawAsymptotes() {
     sf::Vector2f topLeft = screenToWorld(0, 0);
     sf::Vector2f bottomRight = screenToWorld(static_cast<float>(WINDOW_WIDTH), static_cast<float>(WINDOW_HEIGHT));
     
+    std::vector<sf::Vertex> asymptotes;
+    
     // Вертикальная асимптота x = 1
     sf::Vector2f p1 = worldToScreen(1.0f, topLeft.y);
     sf::Vector2f p2 = worldToScreen(1.0f, bottomRight.y);
-    std::vector<sf::Vertex> asymptote1 = {
-        sf::Vertex(p1, COLOR_ASYMPTOTE),
-        sf::Vertex(p2, COLOR_ASYMPTOTE)
-    };
-    window.draw(asymptote1.data(), asymptote1.size(), sf::PrimitiveType::Lines);
+    asymptotes.push_back(sf::Vertex(p1, COLOR_ASYMPTOTE));
+    asymptotes.push_back(sf::Vertex(p2, COLOR_ASYMPTOTE));
     
     // Вертикальная асимптота x = 5
     p1 = worldToScreen(5.0f, topLeft.y);
     p2 = worldToScreen(5.0f, bottomRight.y);
-    std::vector<sf::Vertex> asymptote2 = {
-        sf::Vertex(p1, COLOR_ASYMPTOTE),
-        sf::Vertex(p2, COLOR_ASYMPTOTE)
-    };
-    window.draw(asymptote2.data(), asymptote2.size(), sf::PrimitiveType::Lines);
+    asymptotes.push_back(sf::Vertex(p1, COLOR_ASYMPTOTE));
+    asymptotes.push_back(sf::Vertex(p2, COLOR_ASYMPTOTE));
+    
+    if (!asymptotes.empty()) {
+        window.draw(asymptotes.data(), asymptotes.size(), sf::PrimitiveType::Lines);
+    }
 }
 
 void Graph::drawFunctionLabel() {
     // Информационная панель с функцией
-    sf::RectangleShape infoBox(sf::Vector2f(420, 140));
+    sf::RectangleShape infoBox({420, 140});
     infoBox.setPosition(15, 15);
     infoBox.setFillColor(sf::Color(255, 255, 255, 245));
     infoBox.setOutlineColor(sf::Color::Black);
     infoBox.setOutlineThickness(2.0f);
     window.draw(infoBox);
     
-    // Функция
+    // Цветные точки-легенда
     sf::CircleShape dot1(2.5f);
     dot1.setFillColor(COLOR_GRAPH);
     dot1.setPosition(25, 30);
     window.draw(dot1);
     
-    // Асимптота
     sf::CircleShape dot2(2.5f);
     dot2.setFillColor(COLOR_ASYMPTOTE);
     dot2.setPosition(25, 55);
     window.draw(dot2);
     
-    // Начало координат
     sf::CircleShape dot3(2.5f);
     dot3.setFillColor(COLOR_AXIS);
     dot3.setPosition(25, 80);
     window.draw(dot3);
     
-    // Единица
     sf::CircleShape dot4(2.5f);
     dot4.setFillColor(COLOR_AXIS);
     dot4.setPosition(25, 110);
@@ -382,18 +367,14 @@ void Graph::drawFunctionLabel() {
 
 void Graph::drawScaleInfo() {
     // Информация о масштабе в верхнем правом углу
-    sf::RectangleShape scaleBox(sf::Vector2f(320, 100));
+    sf::RectangleShape scaleBox({320, 100});
     scaleBox.setPosition(WINDOW_WIDTH - 335, 15);
     scaleBox.setFillColor(sf::Color(255, 255, 255, 245));
     scaleBox.setOutlineColor(sf::Color::Black);
     scaleBox.setOutlineThickness(1.5f);
     window.draw(scaleBox);
     
-    // Размер единичного отрезка (в пикселях)
-    sf::CircleShape unitMarker(2.0f);
-    unitMarker.setFillColor(COLOR_AXIS);
-    
-    // Отрисовка масштабной линейки внизу экрана
+    // Масштабная линейка внизу экрана
     float referenceUnitPixels = 40.0f; // Опорный размер (1 единица)
     
     sf::Vector2f referenceStart(WINDOW_WIDTH - 315, WINDOW_HEIGHT - 40);
