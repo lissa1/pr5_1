@@ -3,6 +3,7 @@
 #include <SFML/Graphics.hpp>
 #include <vector>
 #include <cmath>
+#include <string>
 
 class Graph {
 private:
@@ -13,19 +14,24 @@ private:
     float unitSize;          // Размер единичного отрезка в пикселях
     
     // Constants
-    static constexpr unsigned int WINDOW_WIDTH = 1200;
-    static constexpr unsigned int WINDOW_HEIGHT = 800;
+    static constexpr unsigned int WINDOW_WIDTH = 1400;
+    static constexpr unsigned int WINDOW_HEIGHT = 900;
     static constexpr float MIN_SCALE = 0.5f;
-    static constexpr float MAX_SCALE = 50.0f;
-    static constexpr float SCALE_STEP = 1.1f;
-    static constexpr float MOVE_STEP = 20.0f;
+    static constexpr float MAX_SCALE = 100.0f;
+    static constexpr float SCALE_STEP = 1.15f;
+    static constexpr float MOVE_STEP = 15.0f;
     
     // Colors
     static constexpr sf::Color COLOR_BACKGROUND = sf::Color::White;
     static constexpr sf::Color COLOR_AXIS = sf::Color::Black;
-    static constexpr sf::Color COLOR_GRID = sf::Color(200, 200, 200);
-    static constexpr sf::Color COLOR_GRAPH = sf::Color::Blue;
-    static constexpr sf::Color COLOR_ASYMPTOTE = sf::Color::Red;
+    static constexpr sf::Color COLOR_GRID = sf::Color(220, 220, 220);
+    static constexpr sf::Color COLOR_MAJOR_GRID = sf::Color(200, 200, 200);
+    static constexpr sf::Color COLOR_GRAPH = sf::Color(0, 0, 255);
+    static constexpr sf::Color COLOR_ASYMPTOTE = sf::Color(255, 0, 0);
+    static constexpr sf::Color COLOR_TEXT = sf::Color::Black;
+    
+    // Font for labels (we'll use a simple approach without font file)
+    sf::Font* font;
     
 public:
     Graph();
@@ -45,9 +51,11 @@ private:
     void drawGrid();
     void drawAxes();
     void drawAxisLabels();
+    void drawAxisTicksAndLabels();
     void drawGraph();
     void drawAsymptotes();
     void drawFunctionLabel();
+    void drawScaleInfo();
     
     // Преобразования координат
     sf::Vector2f worldToScreen(float x, float y) const;
@@ -58,4 +66,8 @@ private:
     
     // Проверка наличия разрыва функции
     bool hasDiscontinuity(float x1, float x2) const;
+    
+    // Рисование текста (без использования шрифтов)
+    void drawSimpleText(const std::string& text, float x, float y, float size = 12.0f);
+    void drawTickLabel(float value, float x, float y, bool isVertical = false);
 };
