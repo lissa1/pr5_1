@@ -5,7 +5,7 @@
 #include <cmath>
 
 Graph::Graph()
-    : window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Function Grapher: y=(x²-3)/((x-1)(5-x))"),
+    : window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Function Grapher: y=(x2-3)/((x-1)(5-x))"),
       offsetX(0), offsetY(0), scale(30.0f), unitSize(30.0f) {
     window.setFramerateLimit(60);
     window.setPosition(sf::Vector2i(50, 50));
@@ -80,7 +80,7 @@ void Graph::handleInput() {
 }
 
 void Graph::update() {
-    // Обновления происх��дят в handleInput
+    // Обновления происходят в handleInput
 }
 
 void Graph::render() {
@@ -106,21 +106,21 @@ float Graph::evaluateFunction(float x) const {
 }
 
 sf::Vector2f Graph::worldToScreen(float x, float y) const {
-    float screenX = WINDOW_WIDTH / 2.0f + offsetX + x * scale;
-    float screenY = WINDOW_HEIGHT / 2.0f - offsetY - y * scale;
+    float screenX = static_cast<float>(WINDOW_WIDTH) / 2.0f + offsetX + x * scale;
+    float screenY = static_cast<float>(WINDOW_HEIGHT) / 2.0f - offsetY - y * scale;
     return sf::Vector2f(screenX, screenY);
 }
 
 sf::Vector2f Graph::screenToWorld(float screenX, float screenY) const {
-    float x = (screenX - WINDOW_WIDTH / 2.0f - offsetX) / scale;
-    float y = (WINDOW_HEIGHT / 2.0f - offsetY - screenY) / scale;
+    float x = (screenX - static_cast<float>(WINDOW_WIDTH) / 2.0f - offsetX) / scale;
+    float y = (static_cast<float>(WINDOW_HEIGHT) / 2.0f - offsetY - screenY) / scale;
     return sf::Vector2f(x, y);
 }
 
 bool Graph::isPointVisible(float x, float y) const {
     sf::Vector2f screen = worldToScreen(x, y);
-    return screen.x >= -50 && screen.x <= WINDOW_WIDTH + 50 &&
-           screen.y >= -50 && screen.y <= WINDOW_HEIGHT + 50;
+    return screen.x >= -50 && screen.x <= static_cast<float>(WINDOW_WIDTH) + 50 &&
+           screen.y >= -50 && screen.y <= static_cast<float>(WINDOW_HEIGHT) + 50;
 }
 
 bool Graph::hasDiscontinuity(float x1, float x2) const {
@@ -144,7 +144,7 @@ void Graph::drawGrid() {
     if (scale > 40) gridStep = 0.2f;
     
     sf::Vector2f topLeft = screenToWorld(0, 0);
-    sf::Vector2f bottomRight = screenToWorld(WINDOW_WIDTH, WINDOW_HEIGHT);
+    sf::Vector2f bottomRight = screenToWorld(static_cast<float>(WINDOW_WIDTH), static_cast<float>(WINDOW_HEIGHT));
     
     // Вертикальные линии сетки
     for (float x = std::ceil(topLeft.x / gridStep) * gridStep; 
@@ -175,7 +175,7 @@ void Graph::drawGrid() {
 
 void Graph::drawAxes() {
     sf::Vector2f topLeft = screenToWorld(0, 0);
-    sf::Vector2f bottomRight = screenToWorld(WINDOW_WIDTH, WINDOW_HEIGHT);
+    sf::Vector2f bottomRight = screenToWorld(static_cast<float>(WINDOW_WIDTH), static_cast<float>(WINDOW_HEIGHT));
     
     // Ось X
     sf::Vertex axisX[] = {
@@ -227,7 +227,7 @@ void Graph::drawAxisLabels() {
     if (scale > 20) labelStep = 0.5f;
     
     sf::Vector2f topLeft = screenToWorld(0, 0);
-    sf::Vector2f bottomRight = screenToWorld(WINDOW_WIDTH, WINDOW_HEIGHT);
+    sf::Vector2f bottomRight = screenToWorld(static_cast<float>(WINDOW_WIDTH), static_cast<float>(WINDOW_HEIGHT));
     
     // Подписи для оси X
     for (float x = std::ceil(topLeft.x / labelStep) * labelStep;
@@ -260,11 +260,11 @@ void Graph::drawAxisLabels() {
 
 void Graph::drawGraph() {
     sf::Vector2f topLeft = screenToWorld(0, 0);
-    sf::Vector2f bottomRight = screenToWorld(WINDOW_WIDTH, WINDOW_HEIGHT);
+    sf::Vector2f bottomRight = screenToWorld(static_cast<float>(WINDOW_WIDTH), static_cast<float>(WINDOW_HEIGHT));
     
     float xStart = topLeft.x - 2.0f;
     float xEnd = bottomRight.x + 2.0f;
-    float step = (xEnd - xStart) / (WINDOW_WIDTH * 2);
+    float step = (xEnd - xStart) / (static_cast<float>(WINDOW_WIDTH) * 2.0f);
     
     std::vector<sf::Vertex> lineVertices;
     bool inSegment = false;
@@ -273,7 +273,7 @@ void Graph::drawGraph() {
         // Пропускаем области разрыва вблизи x=1 и x=5
         if ((std::abs(x - 1.0f) < 0.15f) || (std::abs(x - 5.0f) < 0.15f)) {
             if (inSegment && lineVertices.size() > 1) {
-                window.draw(&lineVertices[0], lineVertices.size(), sf::LineStrip);
+                window.draw(&lineVertices[0], static_cast<unsigned int>(lineVertices.size()), sf::LineStrip);
                 lineVertices.clear();
                 inSegment = false;
             }
@@ -284,7 +284,7 @@ void Graph::drawGraph() {
         
         if (std::isnan(y) || std::isinf(y) || std::abs(y) > 500.0f) {
             if (inSegment && lineVertices.size() > 1) {
-                window.draw(&lineVertices[0], lineVertices.size(), sf::LineStrip);
+                window.draw(&lineVertices[0], static_cast<unsigned int>(lineVertices.size()), sf::LineStrip);
                 lineVertices.clear();
                 inSegment = false;
             }
@@ -293,12 +293,12 @@ void Graph::drawGraph() {
         
         sf::Vector2f screenPos = worldToScreen(x, y);
         
-        if (screenPos.y >= -100 && screenPos.y <= WINDOW_HEIGHT + 100) {
+        if (screenPos.y >= -100 && screenPos.y <= static_cast<float>(WINDOW_HEIGHT) + 100) {
             lineVertices.push_back(sf::Vertex(screenPos, COLOR_GRAPH));
             inSegment = true;
         } else {
             if (inSegment && lineVertices.size() > 1) {
-                window.draw(&lineVertices[0], lineVertices.size(), sf::LineStrip);
+                window.draw(&lineVertices[0], static_cast<unsigned int>(lineVertices.size()), sf::LineStrip);
                 lineVertices.clear();
                 inSegment = false;
             }
@@ -306,13 +306,13 @@ void Graph::drawGraph() {
     }
     
     if (inSegment && lineVertices.size() > 1) {
-        window.draw(&lineVertices[0], lineVertices.size(), sf::LineStrip);
+        window.draw(&lineVertices[0], static_cast<unsigned int>(lineVertices.size()), sf::LineStrip);
     }
 }
 
 void Graph::drawAsymptotes() {
     sf::Vector2f topLeft = screenToWorld(0, 0);
-    sf::Vector2f bottomRight = screenToWorld(WINDOW_WIDTH, WINDOW_HEIGHT);
+    sf::Vector2f bottomRight = screenToWorld(static_cast<float>(WINDOW_WIDTH), static_cast<float>(WINDOW_HEIGHT));
     
     // Вертикальная асимптота x = 1
     sf::Vector2f p1 = worldToScreen(1.0f, topLeft.y);
