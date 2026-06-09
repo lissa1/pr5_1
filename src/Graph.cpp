@@ -5,14 +5,12 @@
 #include <cmath>
 
 Graph::Graph()
-    : window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "Function Grapher: y=(x2-3)/((x-1)(5-x))"),
+    : window(sf::VideoMode({WINDOW_WIDTH, WINDOW_HEIGHT}), "Function Grapher: y=(x2-3)/((x-1)(5-x))"),
       offsetX(0), offsetY(0), scale(30.0f), unitSize(30.0f) {
     window.setFramerateLimit(60);
-    window.setPosition(sf::Vector2i(50, 50));
 }
 
 Graph::~Graph() {
-    window.close();
 }
 
 void Graph::run() {
@@ -24,26 +22,25 @@ void Graph::run() {
 }
 
 void Graph::handleInput() {
-    sf::Event event;
-    while (window.pollEvent(event)) {
-        if (event.type == sf::Event::Closed) {
+    while (const auto event = window.pollEvent()) {
+        if (event.is<sf::Event::Closed>()) {
             window.close();
         }
-        if (event.type == sf::Event::KeyPressed) {
-            if (event.key.code == sf::Keyboard::Escape) {
+        if (const auto* keyEvent = event.getIf<sf::Event::KeyPressed>()) {
+            if (keyEvent->code == sf::Keyboard::Key::Escape) {
                 window.close();
             }
         }
     }
     
     // Масштабирование
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Add) || sf::Keyboard::isKeyPressed(sf::Keyboard::Equal)) {
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Add) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Equal)) {
         if (scale < MAX_SCALE) {
             scale *= SCALE_STEP;
             unitSize *= SCALE_STEP;
         }
     }
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Subtract) || sf::Keyboard::isKeyPressed(sf::Keyboard::Dash)) {
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Subtract) || sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Dash)) {
         if (scale > MIN_SCALE) {
             scale /= SCALE_STEP;
             unitSize /= SCALE_STEP;
@@ -51,31 +48,31 @@ void Graph::handleInput() {
     }
     
     // Перемещение стрелками
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left)) {
         offsetX -= MOVE_STEP;
     }
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right)) {
         offsetX += MOVE_STEP;
     }
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) {
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up)) {
         offsetY += MOVE_STEP;
     }
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down)) {
         offsetY -= MOVE_STEP;
     }
     
     // Перемещение WASD
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
-        offsetX -= MOVE_STEP;
-    }
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
-        offsetX += MOVE_STEP;
-    }
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W)) {
         offsetY += MOVE_STEP;
     }
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A)) {
+        offsetX -= MOVE_STEP;
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S)) {
         offsetY -= MOVE_STEP;
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D)) {
+        offsetX += MOVE_STEP;
     }
 }
 
@@ -152,11 +149,12 @@ void Graph::drawGrid() {
         sf::Vector2f p1 = worldToScreen(x, topLeft.y);
         sf::Vector2f p2 = worldToScreen(x, bottomRight.y);
         
-        sf::Vertex line[] = {
+        sf::VertexBuffer vb(sf::PrimitiveType::Lines);
+        std::vector<sf::Vertex> vertices = {
             sf::Vertex(p1, COLOR_GRID),
             sf::Vertex(p2, COLOR_GRID)
         };
-        window.draw(line, 2, sf::Lines);
+        window.draw(vertices.data(), vertices.size(), sf::PrimitiveType::Lines);
     }
     
     // Горизонтальные линии сетки
@@ -165,11 +163,11 @@ void Graph::drawGrid() {
         sf::Vector2f p1 = worldToScreen(topLeft.x, y);
         sf::Vector2f p2 = worldToScreen(bottomRight.x, y);
         
-        sf::Vertex line[] = {
+        std::vector<sf::Vertex> vertices = {
             sf::Vertex(p1, COLOR_GRID),
             sf::Vertex(p2, COLOR_GRID)
         };
-        window.draw(line, 2, sf::Lines);
+        window.draw(vertices.data(), vertices.size(), sf::PrimitiveType::Lines);
     }
 }
 
@@ -178,39 +176,39 @@ void Graph::drawAxes() {
     sf::Vector2f bottomRight = screenToWorld(static_cast<float>(WINDOW_WIDTH), static_cast<float>(WINDOW_HEIGHT));
     
     // Ось X
-    sf::Vertex axisX[] = {
+    std::vector<sf::Vertex> axisX = {
         sf::Vertex(worldToScreen(topLeft.x, 0), COLOR_AXIS),
         sf::Vertex(worldToScreen(bottomRight.x, 0), COLOR_AXIS)
     };
-    window.draw(axisX, 2, sf::Lines);
+    window.draw(axisX.data(), axisX.size(), sf::PrimitiveType::Lines);
     
     // Ось Y
-    sf::Vertex axisY[] = {
+    std::vector<sf::Vertex> axisY = {
         sf::Vertex(worldToScreen(0, topLeft.y), COLOR_AXIS),
         sf::Vertex(worldToScreen(0, bottomRight.y), COLOR_AXIS)
     };
-    window.draw(axisY, 2, sf::Lines);
+    window.draw(axisY.data(), axisY.size(), sf::PrimitiveType::Lines);
     
     // Стрелки на осях
     float arrowSize = 10.0f;
     
     sf::Vector2f arrowXEnd = worldToScreen(bottomRight.x - 0.5f, 0);
-    sf::Vertex arrowX[] = {
+    std::vector<sf::Vertex> arrowX = {
         sf::Vertex(arrowXEnd, COLOR_AXIS),
         sf::Vertex(arrowXEnd - sf::Vector2f(arrowSize, arrowSize/2), COLOR_AXIS),
         sf::Vertex(arrowXEnd, COLOR_AXIS),
         sf::Vertex(arrowXEnd - sf::Vector2f(arrowSize, -arrowSize/2), COLOR_AXIS)
     };
-    window.draw(arrowX, 4, sf::Lines);
+    window.draw(arrowX.data(), arrowX.size(), sf::PrimitiveType::Lines);
     
     sf::Vector2f arrowYEnd = worldToScreen(0, topLeft.y - 0.5f);
-    sf::Vertex arrowY[] = {
+    std::vector<sf::Vertex> arrowY = {
         sf::Vertex(arrowYEnd, COLOR_AXIS),
         sf::Vertex(arrowYEnd + sf::Vector2f(arrowSize/2, arrowSize), COLOR_AXIS),
         sf::Vertex(arrowYEnd, COLOR_AXIS),
         sf::Vertex(arrowYEnd + sf::Vector2f(-arrowSize/2, arrowSize), COLOR_AXIS)
     };
-    window.draw(arrowY, 4, sf::Lines);
+    window.draw(arrowY.data(), arrowY.size(), sf::PrimitiveType::Lines);
     
     // Точка начала координат
     sf::CircleShape originPoint(3.0f);
@@ -236,11 +234,11 @@ void Graph::drawAxisLabels() {
         
         sf::Vector2f pos = worldToScreen(x, 0);
         
-        sf::Vertex tick[] = {
+        std::vector<sf::Vertex> tick = {
             sf::Vertex(pos + sf::Vector2f(0, -5), COLOR_AXIS),
             sf::Vertex(pos + sf::Vector2f(0, 5), COLOR_AXIS)
         };
-        window.draw(tick, 2, sf::Lines);
+        window.draw(tick.data(), tick.size(), sf::PrimitiveType::Lines);
     }
     
     // Подписи для оси Y
@@ -250,11 +248,11 @@ void Graph::drawAxisLabels() {
         
         sf::Vector2f pos = worldToScreen(0, y);
         
-        sf::Vertex tick[] = {
+        std::vector<sf::Vertex> tick = {
             sf::Vertex(pos + sf::Vector2f(-5, 0), COLOR_AXIS),
             sf::Vertex(pos + sf::Vector2f(5, 0), COLOR_AXIS)
         };
-        window.draw(tick, 2, sf::Lines);
+        window.draw(tick.data(), tick.size(), sf::PrimitiveType::Lines);
     }
 }
 
@@ -273,7 +271,7 @@ void Graph::drawGraph() {
         // Пропускаем области разрыва вблизи x=1 и x=5
         if ((std::abs(x - 1.0f) < 0.15f) || (std::abs(x - 5.0f) < 0.15f)) {
             if (inSegment && lineVertices.size() > 1) {
-                window.draw(&lineVertices[0], static_cast<unsigned int>(lineVertices.size()), sf::LineStrip);
+                window.draw(lineVertices.data(), lineVertices.size(), sf::PrimitiveType::LineStrip);
                 lineVertices.clear();
                 inSegment = false;
             }
@@ -284,7 +282,7 @@ void Graph::drawGraph() {
         
         if (std::isnan(y) || std::isinf(y) || std::abs(y) > 500.0f) {
             if (inSegment && lineVertices.size() > 1) {
-                window.draw(&lineVertices[0], static_cast<unsigned int>(lineVertices.size()), sf::LineStrip);
+                window.draw(lineVertices.data(), lineVertices.size(), sf::PrimitiveType::LineStrip);
                 lineVertices.clear();
                 inSegment = false;
             }
@@ -298,7 +296,7 @@ void Graph::drawGraph() {
             inSegment = true;
         } else {
             if (inSegment && lineVertices.size() > 1) {
-                window.draw(&lineVertices[0], static_cast<unsigned int>(lineVertices.size()), sf::LineStrip);
+                window.draw(lineVertices.data(), lineVertices.size(), sf::PrimitiveType::LineStrip);
                 lineVertices.clear();
                 inSegment = false;
             }
@@ -306,7 +304,7 @@ void Graph::drawGraph() {
     }
     
     if (inSegment && lineVertices.size() > 1) {
-        window.draw(&lineVertices[0], static_cast<unsigned int>(lineVertices.size()), sf::LineStrip);
+        window.draw(lineVertices.data(), lineVertices.size(), sf::PrimitiveType::LineStrip);
     }
 }
 
@@ -317,20 +315,20 @@ void Graph::drawAsymptotes() {
     // Вертикальная асимптота x = 1
     sf::Vector2f p1 = worldToScreen(1.0f, topLeft.y);
     sf::Vector2f p2 = worldToScreen(1.0f, bottomRight.y);
-    sf::Vertex asymptote1[] = {
+    std::vector<sf::Vertex> asymptote1 = {
         sf::Vertex(p1, COLOR_ASYMPTOTE),
         sf::Vertex(p2, COLOR_ASYMPTOTE)
     };
-    window.draw(asymptote1, 2, sf::Lines);
+    window.draw(asymptote1.data(), asymptote1.size(), sf::PrimitiveType::Lines);
     
     // Вертикальная асимптота x = 5
     p1 = worldToScreen(5.0f, topLeft.y);
     p2 = worldToScreen(5.0f, bottomRight.y);
-    sf::Vertex asymptote2[] = {
+    std::vector<sf::Vertex> asymptote2 = {
         sf::Vertex(p1, COLOR_ASYMPTOTE),
         sf::Vertex(p2, COLOR_ASYMPTOTE)
     };
-    window.draw(asymptote2, 2, sf::Lines);
+    window.draw(asymptote2.data(), asymptote2.size(), sf::PrimitiveType::Lines);
 }
 
 void Graph::drawFunctionLabel() {
